@@ -14,60 +14,34 @@
 ssh <пользователь>@<IP-сервера>
 ```
 
-**2. Установите Docker**
+**2. Скачайте проект**
 
 ```sh
-sudo apt update
-sudo apt install -y curl git
-curl -fsSL https://get.docker.com | sudo sh
+sudo apt update && sudo apt install -y git
+git clone https://github.com/shamukhametovrk/neko-browser.git
+cd neko-browser
 ```
 
-**3. Скачайте проект**
+**3. Запустите установку**
 
 ```sh
-git clone https://github.com/shamukhametovrk/remote-browser.git browser-neko
-cd browser-neko
+sudo bash install.sh
 ```
 
-**4. Создайте настройки**
+Скрипт установит всё нужное и попросит придумать два пароля — для пользователя и администратора
+(можно просто нажать Enter, тогда пароль сгенерируется). В конце он покажет адрес браузера и пароли.
 
-```sh
-cp .env.example .env
-IP=$(curl -s https://ifconfig.me)
-sed -i "s/^PUBLIC_IP=.*/PUBLIC_IP=$IP/; s/^DOMAIN=.*/DOMAIN=$IP.sslip.io/" .env
-```
-
-**5. Задайте пароли**
-
-```sh
-nano .env
-```
-
-Замените значения `USER_PASSWORD` и `ADMIN_PASSWORD` на свои. Сохраните: `Ctrl+O`, `Enter`, `Ctrl+X`.
-
-**6. Откройте порты**
+**4. Откройте порты**
 
 В панели управления сервером у хостера разрешите входящие подключения на порты
 **80**, **443** (TCP) и **52000** (TCP и UDP).
 
-**7. Запустите**
-
-```sh
-sudo docker compose up -d
-```
-
-Первый запуск займёт несколько минут. Узнать адрес браузера:
-
-```sh
-echo "https://$IP.sslip.io/browser/"
-```
-
 ## Вход
 
-Откройте адрес из шага 7. В поле имени напишите любое имя, в поле пароля —
-`USER_PASSWORD` из шага 5. Нажмите на экран, чтобы начать управлять браузером.
+Откройте адрес, который показал скрипт. В поле имени напишите любое имя, в поле пароля —
+пароль пользователя. Нажмите на экран, чтобы начать управлять браузером.
 
-Пароль `ADMIN_PASSWORD` даёт права администратора: управление комнатой и участниками.
+Пароль администратора даёт права на управление комнатой и участниками.
 
 ## Файлы
 
@@ -80,11 +54,11 @@ echo "https://$IP.sslip.io/browser/"
 ## Управление
 
 ```sh
-cd ~/browser-neko
+cd ~/neko-browser
 sudo docker compose restart   # перезапустить
 sudo docker compose down      # остановить
 sudo docker compose up -d     # запустить снова
 ```
 
 Входы в аккаунты и открытые вкладки сохраняются при перезапуске.
-# neko-browser
+Адрес и пароли можно посмотреть ещё раз, запустив `sudo bash install.sh` повторно.
