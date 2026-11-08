@@ -1,0 +1,7 @@
+# Внешний вход: HTTPS с автоматическим сертификатом Let's Encrypt.
+# DOMAIN из .env: домен, направленный на сервер (например, 158.160.135.4.sslip.io).
+# DOMAIN=:80 — без HTTPS, для локального запуска.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy nginx:80
+}

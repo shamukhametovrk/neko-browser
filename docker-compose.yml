@@ -1,0 +1,80 @@
+# Удалённый Chromium (neko) с полным интерфейсом браузера за nginx: http://<host>:HTTP_PORT/browser/
+x-neko: &neko
+  image: ghcr.io/m1k1o/neko/chromium:latest
+  restart: unless-stopped
+  shm_size: 2gb
+
+x-neko-env: &neko-env
+  NEKO_SERVER_PROXY: "true"
+  NEKO_DESKTOP_SCREEN: ${SCREEN}
+  NEKO_MEMBER_PROVIDER: multiuser
+  NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${USER_PASSWORD}
+  NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+  NEKO_SESSION_IMPLICIT_HOSTING: "true"   # клик по экрану = получить управление
+  NEKO_WEBRTC_NAT1TO1: ${PUBLIC_IP}
+  NEKO_WEBRTC_ICELITE: "true"
+  # загрузка: выбор файла на сайте открывает окно загрузки с устройства пользователя
+  NEKO_DESKTOP_FILE_CHOOSER_DIALOG: "true"
+  # скачивание: панель файлов neko показывает /home/neko/Downloads и отдаёт файлы пользователю
+  NEKO_FILETRANSFER_ENABLED: "true"
+  NEKO_FILETRANSFER_DIR: /home/neko/Downloads
+  NEKO_FILETRANSFER_USER_DOWNLOAD: "true"
+  NEKO_FILETRANSFER_USER_UPLOAD: "true"
+
+services:
+  neko-browser:
+    <<: *neko
+    environment:
+      <<: *neko-env
+      START_URL: ${START_URL}
+      NEKO_SERVER_PATH_PREFIX: /browser/
+      NEKO_WEBRTC_UDPMUX: ${WEBRTC_PORT}
+      NEKO_WEBRTC_TCPMUX: ${WEBRTC_PORT}
+    ports:
+      - "${WEBRTC_PORT}:${WEBRTC_PORT}/udp"
+      - "${WEBRTC_PORT}:${WEBRTC_PORT}/tcp"
+    volumes:
+      - ./chromium/supervisord.conf:/etc/neko/supervisord/chromium.conf:ro
+      - ./chromium/start.sh:/etc/neko/start-chromium.sh:ro
+      - ./chromium/policies.json:/etc/chromium/policies/managed/policies.json:ro
+      - browser-profile:/home/neko/.config/chromium   # вход в аккаунт переживает перезапуск
+      - ./xorg/xorg.conf:/etc/neko/xorg.conf:ro   # + режимы экрана для автоподстройки
+
+  # подстраивает разрешение виртуального экрана под окно пользователя (логинится в neko как admin)
+  autofit:
+    image: node:22-alpine
+    restart: unless-stopped
+    command: ["node", "/app/server.mjs"]
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ROOMS: '{"browser":"http://neko-browser:8080/browser/"}'
+    volumes:
+      - ./fit/server.mjs:/app/server.mjs:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on: [neko-browser, autofit]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./fit/fit.js:/usr/share/nginx/fit/fit.js:ro
+
+  # HTTPS снаружи: сам получает и продлевает сертификат Let's Encrypt для DOMAIN
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [nginx]
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "${HTTP_PORT}:80"
+      - "${HTTPS_PORT}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data        # сертификаты: не удаляйте, иначе упрётесь в лимиты Let's Encrypt
+      - caddy-config:/config
+
+volumes:
+  browser-profile:
+  caddy-data:
+  caddy-config:

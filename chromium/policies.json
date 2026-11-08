@@ -1,0 +1,31 @@
+{
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "BrowserSignin": 0,
+  "SyncDisabled": true,
+  "PasswordManagerEnabled": false,
+  "DefaultNotificationsSetting": 2,
+  "DeveloperToolsAvailability": 2,
+  "IncognitoModeAvailability": 1,
+  "BrowserAddPersonEnabled": false,
+  "BrowserGuestModeEnabled": false,
+  "DefaultPopupsSetting": 1,
+  "AllowFileSelectionDialogs": true,
+  "DownloadRestrictions": 0,
+  "DownloadDirectory": "/home/neko/Downloads",
+  "PromptForDownloadLocation": false,
+  "BookmarkBarEnabled": true,
+  "CommandLineFlagSecurityWarningsEnabled": false,
+  "URLAllowlist": [
+    "file:///home/neko/Downloads"
+  ],
+  "URLBlocklist": [
+    "file://*",
+    "chrome://policy",
+    "chrome://settings/reset"
+  ],
+  "ExtensionInstallBlocklist": [
+    "*"
+  ],
+  "RestoreOnStartup": 1
+}
